@@ -25,21 +25,38 @@ def connect_dynamodb(table_name):
         logger.error("Failed to connect to DynamoDB: %s", str(e), exc_info=True)
         raise ValueError("Failed to connect to DynamoDB.")
 
-def validate_message(event):
+def validate_message(body):
     """
     Validate input message
     """
-    logger.info("Validating input message: %s", json.dumps(event))
+    logger.info("Validating input message: %s", json.dumps(body))
 
-    if not isinstance(event, dict):
+    # check json format
+    if not isinstance(body, dict):
         logger.error("Invalid input: Must be a JSON object.")
         raise ValueError("Invalid input: Must be a JSON object.")
     
-    if "messageText" not in event:
+    if "messageUUID" not in body:
+        logger.error("Invalid input: Missing 'messageUUID'.")
+        raise ValueError("Invalid input: Missing 'messageUUID'.")
+    
+    if "messageText" not in body:
         logger.error("Invalid input: Missing 'messageText'.")
         raise ValueError("Invalid input: Missing 'messageText'.")
     
-    message_text = event["messageText"]
+    if "messageDatetime" not in body:
+        logger.error("Invalid input: Missing 'messageDatetime'.")
+        raise ValueError("Invalid input: Missing 'messageDatetime'.")
+    else:
+        # check valid datetime format
+        try:
+            datetime.strptime(body["messageDatetime"], "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            logger.error("Invalid input: 'messageDatetime' must be in 'YYYY-MM-DD HH:MM:SS' format.")
+            raise ValueError("Invalid input: 'messageDatetime' must be in 'YYYY-MM-DD HH:MM:SS' format.")
+    
+    # check message_text len
+    message_text = body["messageText"]
     if not isinstance(message_text, str) or not (10 <= len(message_text) <= 100):
         logger.error("Invalid input: 'messageText' must be a string between 10 and 100 characters.")
         raise ValueError("Invalid input: 'messageText' must be a string between 10 and 100 characters.")
@@ -56,14 +73,21 @@ def process(event, context):
         # Connect to DynamoDB
         table = connect_dynamodb(TABLE_NAME)
 
+        # Extract and parse the body from API Gateway event
+        try:
+            body = json.loads(event["body"])
+        except (KeyError, json.JSONDecodeError):
+            logger.error("Invalid input: Missing or invalid JSON body.")
+            raise ValueError("Invalid input: Missing or invalid JSON body.")
+    
         # Validate the input message
-        validate_message(event)
+        validate_message(body)
         
         # retrive the msg_item
         msg_item = {
-            "messageUUID": event.get("messageUUID", ""),
-            "messageText": event["messageText"],
-            "messageDatetime": event.get("messageDatetime", datetime.utcnow().isoformat())
+            "messageUUID": body["messageUUID"],
+            "messageText": body["messageText"],
+            "messageDatetime": body["messageDatetime"]
         }
         
         # Save to DynamoDB
