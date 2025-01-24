@@ -1,11 +1,12 @@
-from aws_cdk import core as cdk
+import aws_cdk as cdk
 from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_apigateway as apigateway
 from aws_cdk import aws_dynamodb as dynamodb
+from constructs import Construct
 # from aws_cdk import aws_iam as iam
 
 class MsgIngestStack(cdk.Stack):
-    def __init__(self, scope: cdk.Construct, id: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
         # DynamoDB Table
@@ -62,3 +63,7 @@ class MsgIngestStack(cdk.Stack):
         # Define resource and endpoint
         message_resource = api.root.add_resource("message")
         message_resource.add_method("POST")     # POST: Submit or create new data.
+
+app = cdk.App()
+MsgIngestStack(app, "MsgIngestStack")
+app.synth()
