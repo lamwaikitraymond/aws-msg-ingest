@@ -24,6 +24,7 @@ The solution consists of:
 1. [Deployment](#1-deployment)
 2. [Testing](#2-testing-the-result)
 3. [Cleaning Up](#3-cleaning-up)
+4. [Result](#4-result)
 
 ## 1. Deployment
 1. Clone repo
@@ -113,3 +114,10 @@ Once the application is deployed, you can test it using tools like **cURL** or *
    ```
 2. Verify Resource Deletion:
    - Go to the AWS Management Console and ensure the DynamoDB table, Lambda function, and API Gateway are deleted.
+
+# 4. Result
+![alt text](image-1.png)
+![alt text](image-2.png)
+![alt text](image-3.png)
+![alt text](image-4.png)
+![alt text](image-5.png)
